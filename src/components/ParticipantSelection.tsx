@@ -1,36 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSurveyFlow } from '../context/SurveyFlowContext';
 import type { ParticipantSelection } from '../types/survey';
 
-// Mock participant data
-const MOCK_PARTICIPANTS = [
-  { id: 'p1', name: 'John Smith', geography: 'us', category: 'marketing', experience: 'Advanced', availability: 'High' },
-  { id: 'p2', name: 'Sarah Johnson', geography: 'uk', category: 'hr', experience: 'Expert', availability: 'Medium' },
-  { id: 'p3', name: 'Mike Chen', geography: 'ca', category: 'marketing', experience: 'Intermediate', availability: 'High' },
-  { id: 'p4', name: 'Emma Wilson', geography: 'us', category: 'hr', experience: 'Advanced', availability: 'High' },
-  { id: 'p5', name: 'David Brown', geography: 'au', category: 'marketing', experience: 'Expert', availability: 'Low' },
-  { id: 'p6', name: 'Lisa Garcia', geography: 'us', category: 'marketing', experience: 'Beginner', availability: 'High' },
-  { id: 'p7', name: 'Tom Anderson', geography: 'uk', category: 'hr', experience: 'Intermediate', availability: 'Medium' },
-  { id: 'p8', name: 'Anna Lee', geography: 'ca', category: 'marketing', experience: 'Advanced', availability: 'High' },
-];
+// Generate comprehensive participant data - 4 participants for each geography/category combination
+const generateMockParticipants = () => {
+  const geographies = ['us', 'uk', 'ca', 'au', 'de', 'fr', 'jp', 'br'] as const;
+  const categories = ['tech', 'marketing', 'sales', 'hr', 'finance', 'operations', 'customer-service', 'product'];
+  const experiences = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+  const availabilities = ['High', 'Medium', 'Low'];
+  
+  const namesByGeo: Record<string, string[]> = {
+    us: ['John Smith', 'Sarah Johnson', 'Michael Brown', 'Emily Davis', 'David Wilson', 'Jessica Garcia', 'James Miller', 'Ashley Martinez'],
+    uk: ['James Thompson', 'Sophie Clarke', 'Oliver Harris', 'Emily Taylor', 'Harry Potter', 'Emma Watson', 'Benedict Cumberbatch', 'Keira Knightley'],
+    ca: ['Mike Chen', 'Anna Lee', 'Daniel Kim', 'Jessica Wang', 'Ryan Reynolds', 'Rachel McAdams', 'Seth Rogen', 'Ellen Page'],
+    au: ['David Brown', 'Rachel Smith', 'Matthew Jones', 'Chloe Williams', 'Chris Hemsworth', 'Margot Robbie', 'Hugh Jackman', 'Nicole Kidman'],
+    de: ['Hans Mueller', 'Anna Schmidt', 'Klaus Weber', 'Petra Fischer', 'Stefan Wagner', 'Sabine Becker', 'Thomas Schulz', 'Julia Hoffmann'],
+    fr: ['Pierre Dubois', 'Marie Martin', 'Jean Bernard', 'Sophie Moreau', 'Antoine Leroy', 'Camille Roux', 'Nicolas Fournier', 'Isabelle Girard'],
+    jp: ['Hiroshi Tanaka', 'Yuki Sato', 'Kenji Suzuki', 'Akiko Watanabe', 'Takeshi Yamamoto', 'Miyuki Nakamura', 'Satoshi Kobayashi', 'Emi Kato'],
+    br: ['Carlos Silva', 'Ana Santos', 'Roberto Oliveira', 'Fernanda Costa', 'Paulo Pereira', 'Lucia Rodrigues', 'Marcos Almeida', 'Beatriz Lima']
+  };
 
-export function ParticipantSelection() {
+  const participants: Array<{id: string; name: string; geography: string; category: string; experience: string; availability: string}> = [];
+  let participantId = 1;
+
+  geographies.forEach(geo => {
+    categories.forEach(category => {
+      // Create 4 participants for each geo-category combination
+      for (let i = 0; i < 10; i++) {
+        const nameIndex = (categories.indexOf(category) * 10 + i) % namesByGeo[geo].length;
+        participants.push({
+          id: `p${participantId}`,
+          name: namesByGeo[geo][nameIndex],
+          geography: geo,
+          category: category,
+          experience: experiences[i % experiences.length],
+          availability: availabilities[i % availabilities.length]
+        });
+        participantId++;
+      }
+    });
+  });
+
+  return participants;
+};
+
+const MOCK_PARTICIPANTS = generateMockParticipants();
+
+export function ParticipantSelectionComponent() {
   const { state, setParticipantSelections, nextStep, previousStep } = useSurveyFlow();
   const [participantSelections, setParticipantSelectionsState] = useState<ParticipantSelection[]>([]);
 
-  // Initialize participant selections for each live link
-  useEffect(() => {
-    if (state.generatedLiveLinks.length > 0 && participantSelections.length === 0) {
-      const initialSelections = state.generatedLiveLinks.map(link => ({
-        liveLinkId: link.id,
-        selectedParticipants: [],
-        criteria: generateCriteriaForLink(link.id)
-      }));
-      setParticipantSelectionsState(initialSelections);
-    }
-  }, [state.generatedLiveLinks, participantSelections.length]);
-
-  const generateCriteriaForLink = (liveLinkId: string) => {
+  // Generate criteria for a live link
+  const generateCriteriaForLink = useCallback((liveLinkId: string) => {
     const link = state.generatedLiveLinks.find(l => l.id === liveLinkId);
     if (!link) return 'General criteria';
 
@@ -47,7 +68,19 @@ export function ParticipantSelection() {
     }
 
     return criteria.length > 0 ? criteria.join(', ') : 'General criteria';
-  };
+  }, [state.generatedLiveLinks, state.selectedGeographies, state.selectedCategories]);
+
+  // Initialize participant selections for each live link
+  useEffect(() => {
+    if (state.generatedLiveLinks.length > 0 && participantSelections.length === 0) {
+      const initialSelections = state.generatedLiveLinks.map(link => ({
+        liveLinkId: link.id,
+        selectedParticipants: [],
+        criteria: generateCriteriaForLink(link.id)
+      }));
+      setParticipantSelectionsState(initialSelections);
+    }
+  }, [state.generatedLiveLinks, participantSelections.length, generateCriteriaForLink]);
 
   const getMatchingParticipants = (liveLinkId: string) => {
     const link = state.generatedLiveLinks.find(l => l.id === liveLinkId);
@@ -56,25 +89,31 @@ export function ParticipantSelection() {
     return MOCK_PARTICIPANTS.filter(participant => {
       let matches = true;
       
+      // Check geography match
       if (link.geographyId) {
         const geo = state.selectedGeographies.find(g => g.id === link.geographyId);
         if (geo && participant.geography !== geo.id) {
           matches = false;
         }
+      } else {
+        // If no specific geography for this link, check if participant's geography is in selected geographies
+        const participantGeoSelected = state.selectedGeographies.some(g => g.id === participant.geography);
+        if (!participantGeoSelected) {
+          matches = false;
+        }
       }
       
+      // Check category match
       if (link.categoryId) {
         const cat = state.selectedCategories.find(c => c.id === link.categoryId);
-        if (cat) {
-          const categoryMap: { [key: string]: string } = {
-            'marketing': 'marketing',
-            'human-resources': 'hr',
-            'hr': 'hr'
-          };
-          const participantCategory = categoryMap[cat.id] || cat.id.toLowerCase();
-          if (participant.category !== participantCategory) {
-            matches = false;
-          }
+        if (cat && participant.category !== cat.id) {
+          matches = false;
+        }
+      } else {
+        // If no specific category for this link, check if participant's category is in selected categories
+        const participantCatSelected = state.selectedCategories.some(c => c.id === participant.category);
+        if (!participantCatSelected) {
+          matches = false;
         }
       }
 

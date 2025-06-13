@@ -149,7 +149,6 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
         });
         break;
       case 'geo-category-based':
-        let linkIndex = 1;
         state.selectedGeographies.forEach((geo) => {
           state.selectedCategories.forEach((cat) => {
             liveLinks.push({
@@ -159,7 +158,6 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
               geographyId: geo.id,
               categoryId: cat.id
             });
-            linkIndex++;
           });
         });
         break;

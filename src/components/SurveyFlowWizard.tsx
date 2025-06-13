@@ -7,7 +7,7 @@ import { RedirectLinksReceived } from './RedirectLinksReceived';
 import { LiveLinksGeneration } from './LiveLinksGeneration';
 import { ScreenerConfiguration } from './ScreenerConfiguration';
 import { PaymentConfiguration } from './PaymentConfiguration';
-import { ParticipantSelection } from './ParticipantSelection';
+import { ParticipantSelectionComponent } from './ParticipantSelection';
 import { FlowReview } from './FlowReview';
 import { FlowActive } from './FlowActive';
 
@@ -31,7 +31,7 @@ export function SurveyFlowWizard() {
       case 'payment-configuration':
         return <PaymentConfiguration />;
       case 'participant-selection':
-        return <ParticipantSelection />;
+        return <ParticipantSelectionComponent />;
       case 'flow-review':
         return <FlowReview />;
       case 'flow-active':

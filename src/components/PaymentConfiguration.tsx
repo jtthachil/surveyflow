@@ -90,44 +90,36 @@ export function PaymentConfiguration() {
                 </div>
               </div>
 
-              <div className="config-form">
+              <div className="payment-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor={`amount-${config.liveLinkId}`}>
-                      Payment per Response ($)
-                    </label>
+                    <label>Payment per Response ($)</label>
                     <input
-                      id={`amount-${config.liveLinkId}`}
                       type="number"
                       min="40"
-                      step="1"
                       value={config.amount}
-                      onChange={(e) => updatePaymentConfig(config.liveLinkId, 'amount', parseInt(e.target.value) || 40)}
-                      className="amount-input"
+                      onChange={(e) => updatePaymentConfig(config.liveLinkId, 'amount', Math.max(40, parseInt(e.target.value) || 40))}
+                      className="payment-input"
                     />
-                    <span className="input-note">Minimum: $40</span>
+                    <span className="input-hint">Minimum: $40</span>
                   </div>
-
+                  
                   <div className="form-group">
-                    <label htmlFor={`responses-${config.liveLinkId}`}>
-                      Expected Responses
-                    </label>
+                    <label>Expected Responses</label>
                     <input
-                      id={`responses-${config.liveLinkId}`}
                       type="number"
                       min="1"
-                      step="1"
                       value={config.expectedResponses}
-                      onChange={(e) => updatePaymentConfig(config.liveLinkId, 'expectedResponses', parseInt(e.target.value) || 1)}
-                      className="responses-input"
+                      onChange={(e) => updatePaymentConfig(config.liveLinkId, 'expectedResponses', Math.max(1, parseInt(e.target.value) || 1))}
+                      className="payment-input"
                     />
                   </div>
+                </div>
 
-                  <div className="form-group">
-                    <label>Total Cost</label>
-                    <div className="total-cost">
-                      ${config.totalCost.toLocaleString()}
-                    </div>
+                <div className="cost-display">
+                  <div className="total-cost">
+                    <span className="cost-label">Total Cost:</span>
+                    <span className="cost-value">${config.totalCost.toLocaleString()}</span>
                   </div>
                 </div>
               </div>

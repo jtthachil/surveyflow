@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSurveyFlow } from '../context/SurveyFlowContext';
 import { Screener, ScreenerQuestion } from '../types/survey';
 
@@ -9,7 +9,7 @@ export function ScreenerConfiguration() {
   const isMultipleScreeners = state.selectedRequirement?.screenerPattern === 'multiple';
 
   // Generate initial screeners based on requirement pattern
-  const generateInitialScreeners = () => {
+  const generateInitialScreeners = useCallback(() => {
     const newScreeners: Screener[] = [];
     
     if (isMultipleScreeners) {
@@ -67,14 +67,14 @@ export function ScreenerConfiguration() {
     }
     
     setScreenersState(newScreeners);
-  };
+  }, [isMultipleScreeners, state.selectedCategories]);
 
-  // Initialize screeners when component mounts
+  // Initialize screeners when component mounts or when requirements change
   React.useEffect(() => {
     if (screeners.length === 0) {
       generateInitialScreeners();
     }
-  }, []);
+  }, [generateInitialScreeners, screeners.length]);
 
   const addQuestion = (screenerId: string) => {
     setScreenersState(screeners.map(screener => {
