@@ -24,6 +24,19 @@ export interface LiveLink {
   categoryId?: string;
 }
 
+export interface PaymentConfig {
+  liveLinkId: string;
+  amount: number; // minimum 40
+  expectedResponses: number;
+  totalCost: number; // calculated: amount * expectedResponses
+}
+
+export interface ParticipantSelection {
+  liveLinkId: string;
+  selectedParticipants: string[]; // participant IDs
+  criteria: string; // description of selection criteria
+}
+
 export interface Screener {
   id: string;
   questions: ScreenerQuestion[];
@@ -71,6 +84,8 @@ export interface FlowState {
   redirectLinks: RedirectLink[];
   generatedLiveLinks: LiveLink[];
   configuredScreeners: Screener[];
+  paymentConfigs: PaymentConfig[];
+  participantSelections: ParticipantSelection[];
 }
 
 export type FlowStep = 
@@ -80,5 +95,7 @@ export type FlowStep =
   | 'redirect-links-received'
   | 'live-links-generation'
   | 'screener-configuration'
+  | 'payment-configuration'
+  | 'participant-selection'
   | 'flow-review'
   | 'flow-active'; 

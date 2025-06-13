@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { FlowState, FlowStep, FlowRequirement, Geography, Category, RedirectLink, LiveLink, Screener } from '../types/survey';
+import { FlowState, FlowStep, FlowRequirement, Geography, Category, RedirectLink, LiveLink, Screener, PaymentConfig, ParticipantSelection } from '../types/survey';
 
 interface SurveyFlowContextType {
   state: FlowState;
@@ -11,6 +11,8 @@ interface SurveyFlowContextType {
   setRedirectLinks: (links: RedirectLink[]) => void;
   generateLiveLinks: () => void;
   setScreeners: (screeners: Screener[]) => void;
+  setPaymentConfigs: (configs: PaymentConfig[]) => void;
+  setParticipantSelections: (selections: ParticipantSelection[]) => void;
   nextStep: () => void;
   previousStep: () => void;
   goToStep: (step: FlowStep) => void;
@@ -23,6 +25,8 @@ type SurveyFlowAction =
   | { type: 'SET_REDIRECT_LINKS'; payload: RedirectLink[] }
   | { type: 'SET_LIVE_LINKS'; payload: LiveLink[] }
   | { type: 'SET_SCREENERS'; payload: Screener[] }
+  | { type: 'SET_PAYMENT_CONFIGS'; payload: PaymentConfig[] }
+  | { type: 'SET_PARTICIPANT_SELECTIONS'; payload: ParticipantSelection[] }
   | { type: 'SET_STEP'; payload: FlowStep }
   | { type: 'NEXT_STEP' }
   | { type: 'PREVIOUS_STEP' }
@@ -34,7 +38,9 @@ const initialState: FlowState = {
   selectedCategories: [],
   redirectLinks: [],
   generatedLiveLinks: [],
-  configuredScreeners: []
+  configuredScreeners: [],
+  paymentConfigs: [],
+  participantSelections: []
 };
 
 const flowSteps: FlowStep[] = [
@@ -44,6 +50,8 @@ const flowSteps: FlowStep[] = [
   'redirect-links-received',
   'live-links-generation',
   'screener-configuration',
+  'payment-configuration',
+  'participant-selection',
   'flow-review',
   'flow-active'
 ];
@@ -62,6 +70,10 @@ function surveyFlowReducer(state: FlowState, action: SurveyFlowAction): FlowStat
       return { ...state, generatedLiveLinks: action.payload };
     case 'SET_SCREENERS':
       return { ...state, configuredScreeners: action.payload };
+    case 'SET_PAYMENT_CONFIGS':
+      return { ...state, paymentConfigs: action.payload };
+    case 'SET_PARTICIPANT_SELECTIONS':
+      return { ...state, participantSelections: action.payload };
     case 'SET_STEP':
       return { ...state, currentStep: action.payload };
     case 'NEXT_STEP': {
@@ -160,6 +172,14 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
     dispatch({ type: 'SET_SCREENERS', payload: screeners });
   };
 
+  const setPaymentConfigs = (configs: PaymentConfig[]) => {
+    dispatch({ type: 'SET_PAYMENT_CONFIGS', payload: configs });
+  };
+
+  const setParticipantSelections = (selections: ParticipantSelection[]) => {
+    dispatch({ type: 'SET_PARTICIPANT_SELECTIONS', payload: selections });
+  };
+
   const nextStep = () => {
     dispatch({ type: 'NEXT_STEP' });
   };
@@ -181,6 +201,8 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
     setRedirectLinks,
     generateLiveLinks,
     setScreeners,
+    setPaymentConfigs,
+    setParticipantSelections,
     nextStep,
     previousStep,
     goToStep

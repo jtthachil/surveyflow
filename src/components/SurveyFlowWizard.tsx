@@ -6,6 +6,8 @@ import { CategorySelection } from './CategorySelection';
 import { RedirectLinksReceived } from './RedirectLinksReceived';
 import { LiveLinksGeneration } from './LiveLinksGeneration';
 import { ScreenerConfiguration } from './ScreenerConfiguration';
+import { PaymentConfiguration } from './PaymentConfiguration';
+import { ParticipantSelection } from './ParticipantSelection';
 import { FlowReview } from './FlowReview';
 import { FlowActive } from './FlowActive';
 
@@ -26,6 +28,10 @@ export function SurveyFlowWizard() {
         return <LiveLinksGeneration />;
       case 'screener-configuration':
         return <ScreenerConfiguration />;
+      case 'payment-configuration':
+        return <PaymentConfiguration />;
+      case 'participant-selection':
+        return <ParticipantSelection />;
       case 'flow-review':
         return <FlowReview />;
       case 'flow-active':
@@ -43,6 +49,8 @@ export function SurveyFlowWizard() {
       'redirect-links-received',
       'live-links-generation',
       'screener-configuration',
+      'payment-configuration',
+      'participant-selection',
       'flow-review',
       'flow-active'
     ];
@@ -53,12 +61,12 @@ export function SurveyFlowWizard() {
     <div className="survey-flow-wizard">
       <div className="wizard-header">
         <div className="step-indicator">
-          Step {getStepNumber()} of 8
+          Step {getStepNumber()} of 10
         </div>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
-            style={{ width: `${(getStepNumber() / 8) * 100}%` }}
+            style={{ width: `${(getStepNumber() / 10) * 100}%` }}
           />
         </div>
       </div>
