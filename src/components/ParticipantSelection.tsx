@@ -176,32 +176,34 @@ export function ParticipantSelectionComponent() {
     const link = state.generatedLiveLinks.find(l => l.id === liveLinkId);
     if (!link) return 0;
     
-    // Find payment config by matching geography and category
-    const paymentConfig = state.paymentConfigs.find(p => {
-      // For single pattern, any config works
-      if (!link.geographyId && !link.categoryId) {
-        return true;
-      }
-      
-      // For geo-based pattern, match geography
-      if (link.geographyId && !link.categoryId) {
-        return p.geography === link.geographyId;
-      }
-      
-      // For category-based pattern, match category
-      if (!link.geographyId && link.categoryId) {
-        return p.category === link.categoryId;
-      }
-      
-      // For geo-category-based pattern, match both
-      if (link.geographyId && link.categoryId) {
-        return p.geography === link.geographyId && p.category === link.categoryId;
-      }
-      
-      return false;
-    });
+    // For single pattern, sum all payment configs since they all use the same link
+    if (!link.geographyId && !link.categoryId) {
+      // Sum all payment config expected responses for single pattern
+      return state.paymentConfigs.reduce((total, config) => total + config.expectedResponses, 0);
+    }
     
-    return paymentConfig ? paymentConfig.expectedResponses : 100; // Default fallback
+    // For geo-based pattern, sum all configs matching the geography
+    if (link.geographyId && !link.categoryId) {
+      return state.paymentConfigs
+        .filter(p => p.geography === link.geographyId)
+        .reduce((total, config) => total + config.expectedResponses, 0);
+    }
+    
+    // For category-based pattern, sum all configs matching the category
+    if (!link.geographyId && link.categoryId) {
+      return state.paymentConfigs
+        .filter(p => p.category === link.categoryId)
+        .reduce((total, config) => total + config.expectedResponses, 0);
+    }
+    
+    // For geo-category-based pattern, sum all configs matching both
+    if (link.geographyId && link.categoryId) {
+      return state.paymentConfigs
+        .filter(p => p.geography === link.geographyId && p.category === link.categoryId)
+        .reduce((total, config) => total + config.expectedResponses, 0);
+    }
+    
+    return 100; // Default fallback
   };
 
   const handleContinue = () => {

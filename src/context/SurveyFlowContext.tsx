@@ -132,11 +132,28 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
     switch (state.selectedRequirement.liveLinkPattern) {
       case 'single':
         console.log('Generating single pattern link');
-        liveLinks.push({
-          id: 'live-1',
-          url: `https://survey.example.com/live/single?aqx_id=${aqxIdPlaceholder}`,
-          label: 'Main Survey Link'
-        });
+        // For single pattern, still include geo and category info if available
+        if (state.selectedGeographies.length > 0 && state.selectedCategories.length > 0) {
+          const primaryGeo = state.selectedGeographies[0];
+          const primaryCat = state.selectedCategories[0];
+          const geoName = primaryGeo.name.toLowerCase().replace(/\s+/g, '-');
+          const catName = primaryCat.name.toLowerCase().replace(/\s+/g, '-');
+          
+          liveLinks.push({
+            id: 'live-1',
+            url: `https://survey.example.com/live/${geoName}-${catName}?geo=${primaryGeo.code}&cat=${primaryCat.id}&aqx_id=${aqxIdPlaceholder}`,
+            label: 'Main Survey Link',
+            geographyId: primaryGeo.id,
+            categoryId: primaryCat.id
+          });
+        } else {
+          // Fallback to generic single link if no geo/category info
+          liveLinks.push({
+            id: 'live-1',
+            url: `https://survey.example.com/live/single?aqx_id=${aqxIdPlaceholder}`,
+            label: 'Main Survey Link'
+          });
+        }
         break;
       case 'geo-based':
         console.log('Generating geo-based pattern links for geographies:', state.selectedGeographies);
