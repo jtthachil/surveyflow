@@ -316,27 +316,6 @@ export function PaymentConfiguration() {
         <div className="payment-configs-section">
           <div className="section-header">
             <h3>💰 Geography-based Configurations</h3>
-            {availableGeographies.length > 0 && (
-              <div className="geography-selector">
-                <select 
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      addGeographySection(e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  className="geography-select"
-                  defaultValue=""
-                >
-                  <option value="">+ Add Geography</option>
-                  {availableGeographies.map(geo => (
-                    <option key={geo.id} value={geo.id}>
-                      {geo.name} ({geo.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
           {Object.entries(groupedConfigs).map(([geography, configs]) => {
@@ -345,12 +324,6 @@ export function PaymentConfiguration() {
               <div key={geography} className="geography-section">
                 <div className="geography-header">
                   <h4>📍 {geoInfo?.name} ({geoInfo?.code})</h4>
-                  <button 
-                    onClick={() => addRowToGeography(geography)}
-                    className="btn btn-secondary btn-small"
-                  >
-                    + Add Row
-                  </button>
                 </div>
 
                 <div className="geography-configs">
@@ -436,14 +409,66 @@ export function PaymentConfiguration() {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Add Row button at the bottom of each geography section */}
+                  <div className="add-row-section">
+                    <button 
+                      onClick={() => addRowToGeography(geography)}
+                      className="btn btn-secondary btn-small add-row-btn"
+                    >
+                      + Add Row to {geoInfo?.name}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
 
+          {/* Add Geography button at the bottom of all geography sections */}
+          {availableGeographies.length > 0 && (
+            <div className="add-geography-section">
+              <select 
+                onChange={(e) => {
+                  if (e.target.value) {
+                    addGeographySection(e.target.value);
+                    e.target.value = '';
+                  }
+                }}
+                className="geography-select add-geography-select"
+                defaultValue=""
+              >
+                <option value="">+ Add Geography</option>
+                {availableGeographies.map(geo => (
+                  <option key={geo.id} value={geo.id}>
+                    {geo.name} ({geo.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {Object.keys(groupedConfigs).length === 0 && (
             <div className="empty-state">
               <p>No configurations added yet. Select a geography to get started.</p>
+              {availableGeographies.length > 0 && (
+                <select 
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      addGeographySection(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="geography-select"
+                  defaultValue=""
+                >
+                  <option value="">+ Add Geography</option>
+                  {availableGeographies.map(geo => (
+                    <option key={geo.id} value={geo.id}>
+                      {geo.name} ({geo.code})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
         </div>
