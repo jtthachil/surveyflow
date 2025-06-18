@@ -5018,3 +5018,202 @@ body {
   font-size: 0.9rem;
   flex-shrink: 0;
 }
+
+/* RM Balance System Styles */
+.header-with-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  flex: 1;
+}
+
+/* Fix subtitle contrast in payment configuration */
+.header-content .subtitle {
+  color: #475569 !important; /* Dark gray for better readability */
+  font-weight: 500;
+}
+
+.rm-balance-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 300px;
+}
+
+.rm-balance-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.rm-balance-display:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.balance-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a202c;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-up-btn {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.top-up-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.top-up-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.top-up-input {
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  width: 120px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.top-up-input::placeholder {
+  color: #9ca3af;
+  font-weight: normal;
+}
+
+/* Insufficient Balance Warning */
+.insufficient-balance-warning {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.warning-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.warning-text {
+  flex: 1;
+}
+
+.warning-text strong {
+  color: #dc2626;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.warning-text p {
+  color: #991b1b;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.shortage-amount {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  display: inline-block;
+}
+
+/* Responsive Design for RM Balance */
+@media (max-width: 1024px) {
+  .header-with-balance {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .rm-balance-section {
+    align-items: stretch;
+    min-width: auto;
+  }
+  
+  .rm-balance-display {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .rm-balance-display {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  
+  .top-up-input-group {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .top-up-input {
+    width: 100%;
+  }
+  
+  .warning-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

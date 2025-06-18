@@ -37,6 +37,14 @@ export function PaymentConfiguration() {
   const { setPaymentConfigs, setGeographies, setCategories, setRequirement, nextStep, previousStep } = useSurveyFlow();
   const [paymentConfigs, setPaymentConfigsState] = useState<PaymentConfig[]>([]);
   const [loi, setLoi] = useState<number>(20); // Default LOI of 20 minutes
+  
+  // RM Balance state
+  const [availableRM, setAvailableRM] = useState<number>(() => {
+    const saved = localStorage.getItem('availableRM');
+    return saved ? parseFloat(saved) : 50000; // Default 50k RM
+  });
+  const [showTopUpInput, setShowTopUpInput] = useState<boolean>(false);
+  const [topUpAmount, setTopUpAmount] = useState<string>('');
 
   // Calculate RLMV price
   const calculateRLMVPrice = (
@@ -56,6 +64,26 @@ export function PaymentConfiguration() {
     const finalPrice = 1 * geographyMultiplier * professionalPremium * seniorityMultiplier * companySizeMultiplier * currentLoi;
     
     return Math.round(finalPrice * 100) / 100; // Round to 2 decimal places
+  };
+
+  // RM Balance functions
+  const updateAvailableRM = (newAmount: number) => {
+    setAvailableRM(newAmount);
+    localStorage.setItem('availableRM', newAmount.toString());
+  };
+
+  const handleTopUp = () => {
+    const amount = parseFloat(topUpAmount);
+    if (!isNaN(amount) && amount > 0) {
+      updateAvailableRM(availableRM + amount);
+      setTopUpAmount('');
+      setShowTopUpInput(false);
+    }
+  };
+
+  const cancelTopUp = () => {
+    setTopUpAmount('');
+    setShowTopUpInput(false);
   };
 
   // Update LOI for all configurations
@@ -173,6 +201,11 @@ export function PaymentConfiguration() {
 
   const getGrandTotal = () => {
     return getTotalCost() + getServiceCharges();
+  };
+
+  // Check if grand total exceeds available RM
+  const exceedsBalance = () => {
+    return getGrandTotal() > availableRM;
   };
 
   // Group configurations by geography
@@ -301,10 +334,56 @@ export function PaymentConfiguration() {
   return (
     <div className="payment-configuration">
       <div className="container">
-        <h1>Pricing Calculator</h1>
-        <p className="subtitle">
-          Configure pricing using the RLMV (Relative Labour Market Value) model. Add geographies and configure multiple targeting combinations for each.
-        </p>
+        <div className="header-with-balance">
+          <div className="header-content">
+            <h1>Pricing Calculator</h1>
+            <p className="subtitle">
+              Configure pricing using the RLMV (Relative Labour Market Value) model. Add geographies and configure multiple targeting combinations for each.
+            </p>
+          </div>
+          
+          {/* RM Balance Display */}
+          <div className="rm-balance-section">
+            <div className="rm-balance-display">
+              <span className="balance-label">Available RM:</span>
+              <span className="balance-amount">⚗️ {availableRM.toLocaleString()} RM</span>
+              {!showTopUpInput ? (
+                <button 
+                  onClick={() => setShowTopUpInput(true)}
+                  className="btn btn-small btn-outline top-up-btn"
+                  title="Top up RM"
+                >
+                  +
+                </button>
+              ) : (
+                <div className="top-up-input-group">
+                  <input
+                    type="number"
+                    value={topUpAmount}
+                    onChange={(e) => setTopUpAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="top-up-input"
+                    min="0"
+                    step="100"
+                  />
+                  <button 
+                    onClick={handleTopUp}
+                    className="btn btn-small btn-primary"
+                    disabled={!topUpAmount || parseFloat(topUpAmount) <= 0}
+                  >
+                    Add
+                  </button>
+                  <button 
+                    onClick={cancelTopUp}
+                    className="btn btn-small btn-secondary"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* LOI Configuration */}
         <div className="loi-configuration">
@@ -440,9 +519,9 @@ export function PaymentConfiguration() {
                             <div className="price-display">
                               <div className="price-summary">
                                 <span className="price-label">Price per Response:</span>
-                                <span className="price-value">${config.amount}</span>
+                                <span className="price-value">⚗️ {config.amount} RM</span>
                                 <span className="total-label">Total Cost:</span>
-                                <span className="total-value">${config.totalCost.toLocaleString()}</span>
+                                <span className="total-value">⚗️ {config.totalCost.toLocaleString()} RM</span>
                               </div>
                             </div>
                           </div>
@@ -507,21 +586,46 @@ export function PaymentConfiguration() {
               </div>
               <div className="summary-item">
                 <span className="summary-label">Average Price per Response:</span>
-                <span className="summary-value">${getAveragePrice().toFixed(2)}</span>
+                <span className="summary-value">⚗️ {getAveragePrice().toFixed(2)} RM</span>
               </div>
               <div className="summary-item">
                 <span className="summary-label">Subtotal (Survey Costs):</span>
-                <span className="summary-value">${getTotalCost().toLocaleString()}</span>
+                <span className="summary-value">⚗️ {getTotalCost().toLocaleString()} RM</span>
               </div>
               <div className="summary-item service-charges">
                 <span className="summary-label">AkquaintX Service Charges (20%):</span>
-                <span className="summary-value">${getServiceCharges().toLocaleString()}</span>
+                <span className="summary-value">⚗️ {getServiceCharges().toLocaleString()} RM</span>
               </div>
               <div className="summary-item total">
                 <span className="summary-label">Grand Total:</span>
-                <span className="summary-value">${getGrandTotal().toLocaleString()}</span>
+                <span className="summary-value">⚗️ {getGrandTotal().toLocaleString()} RM</span>
               </div>
             </div>
+
+            {/* Insufficient Balance Warning */}
+            {exceedsBalance() && (
+              <div className="insufficient-balance-warning">
+                <div className="warning-content">
+                  <span className="warning-icon">⚠️</span>
+                  <div className="warning-text">
+                    <strong>Insufficient RM Balance</strong>
+                    <p>
+                      Your grand total (⚗️ {getGrandTotal().toLocaleString()} RM) exceeds your available balance 
+                      (⚗️ {availableRM.toLocaleString()} RM). Please top up your RM to proceed.
+                    </p>
+                    <p className="shortage-amount">
+                      Shortage: ⚗️ {(getGrandTotal() - availableRM).toLocaleString()} RM
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowTopUpInput(true)}
+                    className="btn btn-primary btn-small"
+                  >
+                    Top Up RM
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -532,7 +636,7 @@ export function PaymentConfiguration() {
           <button 
             onClick={handleContinue} 
             className="btn btn-primary"
-            disabled={!canContinue}
+            disabled={!canContinue || exceedsBalance()}
           >
             Continue to Redirect Links
           </button>
