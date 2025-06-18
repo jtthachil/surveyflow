@@ -539,7 +539,7 @@ export function ScreenerConfiguration() {
           ))}
         </div>
 
-        <div className="activation-checklist enhanced">
+        <div className="activation-checklist compact">
           <div className="checklist-header">
             <span className="checklist-icon">⚠️</span>
             <h3>Pre-Activation Checklist</h3>

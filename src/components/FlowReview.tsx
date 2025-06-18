@@ -419,29 +419,27 @@ export function FlowReview() {
           </div>
         </div>
 
-        <div className="activation-checklist-section">
+        <div className="activation-checklist-section compact">
           <div className="checklist-header">
             <span className="checklist-icon">⚠️</span>
             <h3>Pre-Activation Checklist</h3>
           </div>
-          <div className="checklist-content">
-            <div className="checklist-items">
-              <div className="checklist-item">
-                <span className="check-icon">✅</span>
-                <span className="check-text">Ensure all redirect links are valid and accessible</span>
-              </div>
-              <div className="checklist-item">
-                <span className="check-icon">✅</span>
-                <span className="check-text">Verify live links are properly configured in your survey platform</span>
-              </div>
-              <div className="checklist-item">
-                <span className="check-icon">✅</span>
-                <span className="check-text">Test screener logic and question flow</span>
-              </div>
-              <div className="checklist-item">
-                <span className="check-icon">✅</span>
-                <span className="check-text">Confirm geography and category targeting is correct</span>
-              </div>
+          <div className="checklist-items">
+            <div className="checklist-item">
+              <span className="check-icon">✅</span>
+              <span className="check-text">Ensure all redirect links are valid and accessible</span>
+            </div>
+            <div className="checklist-item">
+              <span className="check-icon">✅</span>
+              <span className="check-text">Verify live links are properly configured in your survey platform</span>
+            </div>
+            <div className="checklist-item">
+              <span className="check-icon">✅</span>
+              <span className="check-text">Test screener logic and question flow</span>
+            </div>
+            <div className="checklist-item">
+              <span className="check-icon">✅</span>
+              <span className="check-text">Confirm geography and category targeting is correct</span>
             </div>
           </div>
         </div>

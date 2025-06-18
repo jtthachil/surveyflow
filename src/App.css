@@ -1620,7 +1620,7 @@ body {
 
 .flow-active .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #ffffff; /* Changed to white for better contrast on colored gradient backgrounds */
   font-weight: 500;
 }
 
@@ -4896,4 +4896,125 @@ body {
   font-size: 0.875rem;
   color: #f1f5f9 !important; /* Added !important and made more specific for better contrast */
   font-weight: 500;
+}
+
+/* Compact Activation Checklist Styles */
+.activation-checklist.compact {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.activation-checklist.compact .checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f59e0b;
+}
+
+.activation-checklist.compact .checklist-icon {
+  font-size: 1rem;
+}
+
+.activation-checklist.compact .checklist-header h3 {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.activation-checklist.compact .checklist-content {
+  background: white;
+  border-radius: 6px;
+  padding: 0.75rem;
+  border: 1px solid #f59e0b;
+}
+
+.activation-checklist.compact .checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activation-checklist.compact .checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.activation-checklist.compact .checklist-item:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.activation-checklist.compact .check-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.activation-checklist-section.compact {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.activation-checklist-section.compact .checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f59e0b;
+}
+
+.activation-checklist-section.compact .checklist-icon {
+  font-size: 1rem;
+}
+
+.activation-checklist-section.compact .checklist-header h3 {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.activation-checklist-section.compact .checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activation-checklist-section.compact .checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.activation-checklist-section.compact .checklist-item:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.activation-checklist-section.compact .check-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
