@@ -34,7 +34,7 @@ const MOCK_CATEGORIES: Category[] = [
 ];
 
 export function PaymentConfiguration() {
-  const { state, setPaymentConfigs, setGeographies, setCategories, nextStep, previousStep } = useSurveyFlow();
+  const { setPaymentConfigs, setGeographies, setCategories, setRequirement, nextStep, previousStep } = useSurveyFlow();
   const [paymentConfigs, setPaymentConfigsState] = useState<PaymentConfig[]>([]);
   const [loi, setLoi] = useState<number>(20); // Default LOI of 20 minutes
 
@@ -209,9 +209,13 @@ export function PaymentConfiguration() {
     // Automatically determine requirement based on configurations
     const requirement = determineRequirement(uniqueGeographies, uniqueCategories, paymentConfigs);
     if (requirement) {
-      // Set the requirement in context (we need to add this to context)
-      // For now, we'll store it in state and pass it along
+      // Set the requirement in context
+      setRequirement(requirement);
+      
+      // Save to localStorage to persist across navigation
       localStorage.setItem('detectedRequirement', JSON.stringify(requirement));
+      
+      console.log('Requirement saved to localStorage:', requirement);
     }
     
     nextStep();
@@ -222,6 +226,16 @@ export function PaymentConfiguration() {
     const hasMultipleGeographies = geographies.length > 1;
     const hasMultipleCategories = categories.length > 1;
     const hasMultipleConfigsPerGeo = Object.values(groupedConfigs).some(configs => configs.length > 1);
+
+    // Debug logging
+    console.log('Requirement determination:', {
+      geographies: geographies.map(g => g.name),
+      categories: categories.map(c => c.name),
+      hasMultipleGeographies,
+      hasMultipleCategories,
+      hasMultipleConfigsPerGeo,
+      totalConfigs: configs.length
+    });
 
     // Mock requirements for determination
     const requirements = [
@@ -265,17 +279,19 @@ export function PaymentConfiguration() {
 
     // Determine requirement based on configuration pattern
     let selectedRequirement;
-    if (!hasMultipleGeographies && !hasMultipleCategories && !hasMultipleConfigsPerGeo) {
-      selectedRequirement = requirements[0]; // Requirement 1
+    if (!hasMultipleGeographies && !hasMultipleCategories) {
+      selectedRequirement = requirements[0]; // Requirement 1 - Single/Single
     } else if (hasMultipleGeographies && !hasMultipleCategories) {
-      selectedRequirement = requirements[1]; // Requirement 2
+      selectedRequirement = requirements[1]; // Requirement 2 - Multi Geo/Single Category
     } else if (hasMultipleGeographies && hasMultipleCategories) {
-      selectedRequirement = requirements[2]; // Requirement 3
+      selectedRequirement = requirements[2]; // Requirement 3 - Multi Geo/Multi Category
     } else if (!hasMultipleGeographies && hasMultipleCategories) {
-      selectedRequirement = requirements[3]; // Requirement 4
+      selectedRequirement = requirements[3]; // Requirement 4 - Single Geo/Multi Category
     } else {
       selectedRequirement = requirements[2]; // Default to requirement 3 for complex cases
     }
+    
+    console.log('Selected requirement:', selectedRequirement);
     
     return selectedRequirement;
   };
@@ -289,12 +305,6 @@ export function PaymentConfiguration() {
         <p className="subtitle">
           Configure pricing using the RLMV (Relative Labour Market Value) model. Add geographies and configure multiple targeting combinations for each.
         </p>
-
-        <div className="configuration-info">
-          <div className="requirement-badge">
-            {state.selectedRequirement?.name} - RLMV Pricing Model
-          </div>
-        </div>
 
         {/* LOI Configuration */}
         <div className="loi-configuration">
@@ -318,158 +328,167 @@ export function PaymentConfiguration() {
             <h3>💰 Geography-based Configurations</h3>
           </div>
 
-          {Object.entries(groupedConfigs).map(([geography, configs]) => {
-            const geoInfo = MOCK_GEOGRAPHIES.find(g => g.id === geography);
-            return (
-              <div key={geography} className="geography-section">
-                <div className="geography-header">
-                  <h4>📍 {geoInfo?.name} ({geoInfo?.code})</h4>
-                </div>
+          {Object.keys(groupedConfigs).length === 0 ? (
+            <div className="empty-state-card">
+              <div className="empty-state-content">
+                <div className="empty-state-icon">🌍</div>
+                <h4>No configurations added yet</h4>
+                <p>Select a geography to get started with your pricing configuration</p>
+                {availableGeographies.length > 0 && (
+                  <select 
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addGeographySection(e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="geography-select primary-select"
+                    defaultValue=""
+                  >
+                    <option value="">+ Add Geography</option>
+                    {availableGeographies.map(geo => (
+                      <option key={geo.id} value={geo.id}>
+                        {geo.name} ({geo.code})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {Object.entries(groupedConfigs).map(([geography, configs]) => {
+                const geoInfo = MOCK_GEOGRAPHIES.find(g => g.id === geography);
+                return (
+                  <div key={geography} className="geography-section">
+                    <div className="geography-header">
+                      <h4>📍 {geoInfo?.name} ({geoInfo?.code})</h4>
+                    </div>
 
-                <div className="geography-configs">
-                  {configs.map((config, index) => (
-                    <div key={config.liveLinkId} className="config-row">
-                      <div className="row-header">
-                        <span className="row-number">Row {index + 1}</span>
+                    <div className="geography-configs">
+                      {configs.map((config, index) => (
+                        <div key={config.liveLinkId} className="config-row">
+                          <div className="row-header">
+                            <span className="row-number">Row {index + 1}</span>
+                            <button 
+                              onClick={() => removePaymentConfig(config.liveLinkId)}
+                              className="btn btn-danger btn-small"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="config-form">
+                            <div className="form-row">
+                              <div className="form-group">
+                                <label>Category</label>
+                                <select
+                                  value={config.category}
+                                  onChange={(e) => updatePaymentConfig(config.liveLinkId, 'category', e.target.value)}
+                                  className="form-select"
+                                >
+                                  {MOCK_CATEGORIES.map(cat => (
+                                    <option key={cat.id} value={cat.id}>
+                                      {cat.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="form-group">
+                                <label>Seniority Level</label>
+                                <select
+                                  value={config.seniority}
+                                  onChange={(e) => updatePaymentConfig(config.liveLinkId, 'seniority', e.target.value)}
+                                  className="form-select"
+                                >
+                                  {Object.keys(SENIORITY_MULTIPLIERS).map(level => (
+                                    <option key={level} value={level}>
+                                      {level} ({SENIORITY_MULTIPLIERS[level as keyof typeof SENIORITY_MULTIPLIERS]}x)
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="form-group">
+                                <label>Company Size</label>
+                                <select
+                                  value={config.companySize}
+                                  onChange={(e) => updatePaymentConfig(config.liveLinkId, 'companySize', e.target.value)}
+                                  className="form-select"
+                                >
+                                  <option value="Small">Small (0-50) - {COMPANY_SIZE_MULTIPLIERS.Small}x</option>
+                                  <option value="SME">SME (50-500) - {COMPANY_SIZE_MULTIPLIERS.SME}x</option>
+                                  <option value="Mid Market">Mid Market (500-5000) - {COMPANY_SIZE_MULTIPLIERS['Mid Market']}x</option>
+                                  <option value="Enterprise">Enterprise (&gt;5000) - {COMPANY_SIZE_MULTIPLIERS.Enterprise}x</option>
+                                </select>
+                              </div>
+
+                              <div className="form-group">
+                                <label>Expected Responses</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={config.expectedResponses}
+                                  onChange={(e) => updatePaymentConfig(config.liveLinkId, 'expectedResponses', Math.max(1, parseInt(e.target.value) || 1))}
+                                  className="form-input"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Price Display */}
+                            <div className="price-display">
+                              <div className="price-summary">
+                                <span className="price-label">Price per Response:</span>
+                                <span className="price-value">${config.amount}</span>
+                                <span className="total-label">Total Cost:</span>
+                                <span className="total-value">${config.totalCost.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Add Row button at the bottom of each geography section */}
+                      <div className="add-row-section">
                         <button 
-                          onClick={() => removePaymentConfig(config.liveLinkId)}
-                          className="btn btn-danger btn-small"
+                          onClick={() => addRowToGeography(geography)}
+                          className="btn btn-secondary btn-small add-row-btn"
                         >
-                          Remove
+                          + Add Row to {geoInfo?.name}
                         </button>
                       </div>
-
-                      <div className="config-form">
-                        <div className="form-row">
-                          <div className="form-group">
-                            <label>Category</label>
-                            <select
-                              value={config.category}
-                              onChange={(e) => updatePaymentConfig(config.liveLinkId, 'category', e.target.value)}
-                              className="form-select"
-                            >
-                              {MOCK_CATEGORIES.map(cat => (
-                                <option key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="form-group">
-                            <label>Seniority Level</label>
-                            <select
-                              value={config.seniority}
-                              onChange={(e) => updatePaymentConfig(config.liveLinkId, 'seniority', e.target.value)}
-                              className="form-select"
-                            >
-                              {Object.keys(SENIORITY_MULTIPLIERS).map(level => (
-                                <option key={level} value={level}>
-                                  {level} ({SENIORITY_MULTIPLIERS[level as keyof typeof SENIORITY_MULTIPLIERS]}x)
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="form-group">
-                            <label>Company Size</label>
-                            <select
-                              value={config.companySize}
-                              onChange={(e) => updatePaymentConfig(config.liveLinkId, 'companySize', e.target.value)}
-                              className="form-select"
-                            >
-                              <option value="Small">Small (0-50) - {COMPANY_SIZE_MULTIPLIERS.Small}x</option>
-                              <option value="SME">SME (50-500) - {COMPANY_SIZE_MULTIPLIERS.SME}x</option>
-                              <option value="Mid Market">Mid Market (500-5000) - {COMPANY_SIZE_MULTIPLIERS['Mid Market']}x</option>
-                              <option value="Enterprise">Enterprise (&gt;5000) - {COMPANY_SIZE_MULTIPLIERS.Enterprise}x</option>
-                            </select>
-                          </div>
-
-                          <div className="form-group">
-                            <label>Expected Responses</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={config.expectedResponses}
-                              onChange={(e) => updatePaymentConfig(config.liveLinkId, 'expectedResponses', Math.max(1, parseInt(e.target.value) || 1))}
-                              className="form-input"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Price Display */}
-                        <div className="price-display">
-                          <div className="price-summary">
-                            <span className="price-label">Price per Response:</span>
-                            <span className="price-value">${config.amount}</span>
-                            <span className="total-label">Total Cost:</span>
-                            <span className="total-value">${config.totalCost.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  ))}
-                  
-                  {/* Add Row button at the bottom of each geography section */}
-                  <div className="add-row-section">
-                    <button 
-                      onClick={() => addRowToGeography(geography)}
-                      className="btn btn-secondary btn-small add-row-btn"
+                  </div>
+                );
+              })}
+
+              {/* Add Geography button at the bottom of all geography sections */}
+              {availableGeographies.length > 0 && (
+                <div className="add-geography-section">
+                  <div className="add-geography-content">
+                    <span className="add-geography-text">Add another geography:</span>
+                    <select 
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addGeographySection(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="geography-select add-geography-select"
+                      defaultValue=""
                     >
-                      + Add Row to {geoInfo?.name}
-                    </button>
+                      <option value="">+ Add Geography</option>
+                      {availableGeographies.map(geo => (
+                        <option key={geo.id} value={geo.id}>
+                          {geo.name} ({geo.code})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-
-          {/* Add Geography button at the bottom of all geography sections */}
-          {availableGeographies.length > 0 && (
-            <div className="add-geography-section">
-              <select 
-                onChange={(e) => {
-                  if (e.target.value) {
-                    addGeographySection(e.target.value);
-                    e.target.value = '';
-                  }
-                }}
-                className="geography-select add-geography-select"
-                defaultValue=""
-              >
-                <option value="">+ Add Geography</option>
-                {availableGeographies.map(geo => (
-                  <option key={geo.id} value={geo.id}>
-                    {geo.name} ({geo.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {Object.keys(groupedConfigs).length === 0 && (
-            <div className="empty-state">
-              <p>No configurations added yet. Select a geography to get started.</p>
-              {availableGeographies.length > 0 && (
-                <select 
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      addGeographySection(e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  className="geography-select"
-                  defaultValue=""
-                >
-                  <option value="">+ Add Geography</option>
-                  {availableGeographies.map(geo => (
-                    <option key={geo.id} value={geo.id}>
-                      {geo.name} ({geo.code})
-                    </option>
-                  ))}
-                </select>
               )}
-            </div>
+            </>
           )}
         </div>
 

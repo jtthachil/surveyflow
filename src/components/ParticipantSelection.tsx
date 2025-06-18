@@ -177,10 +177,31 @@ export function ParticipantSelectionComponent() {
     if (!link) return 0;
     
     // Find payment config by matching geography and category
-    const paymentConfig = state.paymentConfigs.find(p => 
-      p.geography === link.geographyId && p.category === link.categoryId
-    );
-    return paymentConfig ? paymentConfig.expectedResponses : 0;
+    const paymentConfig = state.paymentConfigs.find(p => {
+      // For single pattern, any config works
+      if (!link.geographyId && !link.categoryId) {
+        return true;
+      }
+      
+      // For geo-based pattern, match geography
+      if (link.geographyId && !link.categoryId) {
+        return p.geography === link.geographyId;
+      }
+      
+      // For category-based pattern, match category
+      if (!link.geographyId && link.categoryId) {
+        return p.category === link.categoryId;
+      }
+      
+      // For geo-category-based pattern, match both
+      if (link.geographyId && link.categoryId) {
+        return p.geography === link.geographyId && p.category === link.categoryId;
+      }
+      
+      return false;
+    });
+    
+    return paymentConfig ? paymentConfig.expectedResponses : 100; // Default fallback
   };
 
   const handleContinue = () => {

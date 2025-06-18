@@ -5,6 +5,7 @@ import { Screener, ScreenerQuestion } from '../types/survey';
 export function ScreenerConfiguration() {
   const { state, setScreeners, nextStep, previousStep } = useSurveyFlow();
   const [screeners, setScreenersState] = useState<Screener[]>([]);
+  const [aiGenerationStatus, setAiGenerationStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const isMultipleScreeners = state.selectedRequirement?.screenerPattern === 'multiple';
 
@@ -132,154 +133,451 @@ export function ScreenerConfiguration() {
     return category ? category.name : 'Unknown';
   };
 
+  const generateScreenersWithAI = async () => {
+    setAiGenerationStatus('loading');
+    
+    try {
+      // Simulate AI generation delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate AI-powered screeners based on configurations
+      const aiGeneratedScreeners: Screener[] = [];
+      
+      if (isMultipleScreeners) {
+        // Generate category-specific screeners
+        state.selectedCategories.forEach((category, index) => {
+          const categoryScreener: Screener = {
+            id: `ai-screener-${category.id}`,
+            categoryId: category.id,
+            questions: generateAIQuestionsForCategory(category.name, category.department)
+          };
+          aiGeneratedScreeners.push(categoryScreener);
+        });
+      } else {
+        // Generate single comprehensive screener
+        const generalScreener: Screener = {
+          id: 'ai-screener-general',
+          questions: generateAIGeneralQuestions()
+        };
+        aiGeneratedScreeners.push(generalScreener);
+      }
+      
+      setScreenersState(aiGeneratedScreeners);
+      setAiGenerationStatus('success');
+    } catch (error) {
+      setAiGenerationStatus('error');
+      console.error('AI generation failed:', error);
+    }
+  };
+
+  const generateAIQuestionsForCategory = (categoryName: string, department: string): ScreenerQuestion[] => {
+    return [
+      {
+        id: `ai-q1-${categoryName}`,
+        question: `How many years of experience do you have in ${categoryName}?`,
+        type: 'single',
+        options: ['Less than 1 year', '1-3 years', '3-5 years', '5-10 years', 'More than 10 years'],
+        required: true
+      },
+      {
+        id: `ai-q2-${categoryName}`,
+        question: `What is your current role level in ${categoryName}?`,
+        type: 'single',
+        options: ['Entry Level', 'Mid-level', 'Senior', 'Lead/Manager', 'Director/VP', 'C-Level'],
+        required: true
+      },
+      {
+        id: `ai-q3-${categoryName}`,
+        question: `Which of the following ${categoryName} tools/technologies are you familiar with?`,
+        type: 'multiple',
+        options: getToolsForCategory(categoryName),
+        required: false
+      },
+      {
+        id: `ai-q4-${categoryName}`,
+        question: `How would you rate your expertise in ${categoryName}?`,
+        type: 'single',
+        options: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+        required: true
+      }
+    ];
+  };
+
+  const generateAIGeneralQuestions = (): ScreenerQuestion[] => {
+    return [
+      {
+        id: 'ai-general-1',
+        question: 'What is your current employment status?',
+        type: 'single',
+        options: ['Employed full-time', 'Employed part-time', 'Self-employed', 'Unemployed', 'Student', 'Retired'],
+        required: true
+      },
+      {
+        id: 'ai-general-2',
+        question: 'What is your primary industry of work?',
+        type: 'single',
+        options: ['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Other'],
+        required: true
+      },
+      {
+        id: 'ai-general-3',
+        question: 'What is your company size?',
+        type: 'single',
+        options: ['1-10 employees', '11-50 employees', '51-200 employees', '201-1000 employees', '1000+ employees'],
+        required: true
+      },
+      {
+        id: 'ai-general-4',
+        question: 'Which age group do you belong to?',
+        type: 'single',
+        options: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
+        required: false
+      }
+    ];
+  };
+
+  const getToolsForCategory = (categoryName: string): string[] => {
+    const toolsMap: Record<string, string[]> = {
+      'Technology': ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes'],
+      'Marketing': ['Google Analytics', 'HubSpot', 'Salesforce', 'Adobe Creative Suite', 'Mailchimp', 'SEMrush'],
+      'Sales': ['CRM Software', 'Salesforce', 'HubSpot', 'Pipedrive', 'LinkedIn Sales Navigator', 'Zoom'],
+      'Human Resources': ['HRIS Systems', 'Workday', 'BambooHR', 'ATS Software', 'Slack', 'Microsoft Teams'],
+      'Finance': ['Excel/Spreadsheets', 'QuickBooks', 'SAP', 'Oracle', 'Tableau', 'Power BI'],
+      'Operations': ['Project Management Tools', 'Asana', 'Trello', 'Jira', 'Slack', 'Microsoft Project']
+    };
+    
+    return toolsMap[categoryName] || ['Industry-specific tools', 'General business software', 'Communication platforms'];
+  };
+
   return (
     <div className="screener-configuration">
       <div className="container">
-        <h1>Configure Screeners</h1>
-        <p className="subtitle">
-          Set up screening questions to qualify survey respondents.
-          {isMultipleScreeners 
-            ? ' You need separate screener sets for each selected category.'
-            : ' You need one screener set for all respondents.'
-          }
-        </p>
+        <div className="screener-header-section">
+          <h1>🎯 Configure Screeners</h1>
+          <p className="subtitle">
+            Set up screening questions to qualify survey respondents and ensure data quality.
+            {isMultipleScreeners 
+              ? ' Create targeted screener sets for each category.'
+              : ' Design a comprehensive screener for all respondents.'
+            }
+          </p>
+        </div>
 
-        <div className="configuration-info">
-          <div className="requirement-badge">
-            {state.selectedRequirement?.name} - {isMultipleScreeners ? 'Multiple' : 'Single'} Screener Set
+        <div className="screener-overview-card">
+          <div className="overview-header">
+            <span className="overview-icon">📊</span>
+            <h3>Screener Overview</h3>
           </div>
           
-          <div className="screener-summary">
-            <div className="summary-item">
-              <span className="label">Total Screener Sets:</span>
-              <span className="value">{screeners.length}</span>
+          <div className="overview-content">
+            <div className="overview-badge">
+              <span className="badge-icon">🎯</span>
+              <span className="badge-text">{state.selectedRequirement?.name}</span>
+              <span className="badge-pattern">{isMultipleScreeners ? 'Multiple Sets' : 'Single Set'}</span>
             </div>
-            <div className="summary-item">
-              <span className="label">Pattern:</span>
-              <span className="value">{state.selectedRequirement?.screenerPattern}</span>
+            
+            <div className="overview-stats">
+              <div className="stat-item">
+                <span className="stat-icon">📝</span>
+                <div className="stat-content">
+                  <span className="stat-value">{screeners.length}</span>
+                  <span className="stat-label">Screener Sets</span>
+                </div>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">❓</span>
+                <div className="stat-content">
+                  <span className="stat-value">{screeners.reduce((total, s) => total + s.questions.length, 0)}</span>
+                  <span className="stat-label">Total Questions</span>
+                </div>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">🔧</span>
+                <div className="stat-content">
+                  <span className="stat-value">{state.selectedRequirement?.screenerPattern}</span>
+                  <span className="stat-label">Pattern</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="screeners-list">
-          {screeners.map((screener) => (
-            <div key={screener.id} className="screener-card">
-              <div className="screener-header">
-                <h3>
-                  Screener for {getCategoryName(screener.categoryId)}
-                  {screener.categoryId && (
-                    <span className="category-badge">
-                      📋 {getCategoryName(screener.categoryId)}
-                    </span>
-                  )}
-                </h3>
+        {/* AI Screener Generation Section */}
+        <div className="ai-generation-section">
+          <div className="ai-generation-header">
+            <span className="ai-icon">🤖</span>
+            <h3>Generate Screeners with AI</h3>
+          </div>
+          
+          <div className="ai-generation-content">
+            <p className="ai-description">
+              Let our AI automatically generate intelligent screener questions based on your survey configuration. 
+              The AI will analyze your selected geographies, categories, and requirements to create targeted screening questions.
+            </p>
+            
+            <div className="ai-features">
+              <div className="ai-feature">
+                <span className="ai-feature-icon">🎯</span>
+                <span className="ai-feature-text">Category-specific questions</span>
+              </div>
+              <div className="ai-feature">
+                <span className="ai-feature-icon">🌍</span>
+                <span className="ai-feature-text">Geography-aware targeting</span>
+              </div>
+              <div className="ai-feature">
+                <span className="ai-feature-icon">⚡</span>
+                <span className="ai-feature-text">Instant generation</span>
+              </div>
+              <div className="ai-feature">
+                <span className="ai-feature-icon">✨</span>
+                <span className="ai-feature-text">Professional quality</span>
+              </div>
+            </div>
+
+            {/* Configuration Preview */}
+            <div className="ai-config-preview">
+              <div className="ai-config-title">Current Configuration</div>
+              <div className="ai-config-details">
+                <div className="config-detail">
+                  <span className="config-detail-icon">🌍</span>
+                  <span>{state.selectedGeographies.length} Geographies</span>
+                </div>
+                <div className="config-detail">
+                  <span className="config-detail-icon">🎯</span>
+                  <span>{state.selectedCategories.length} Categories</span>
+                </div>
+                <div className="config-detail">
+                  <span className="config-detail-icon">📋</span>
+                  <span>{state.selectedRequirement?.name}</span>
+                </div>
+                <div className="config-detail">
+                  <span className="config-detail-icon">🔧</span>
+                  <span>{isMultipleScreeners ? 'Multiple' : 'Single'} Screener Set</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="ai-generation-actions">
+              <button
+                onClick={generateScreenersWithAI}
+                disabled={aiGenerationStatus === 'loading'}
+                className="ai-generate-btn"
+              >
+                {aiGenerationStatus === 'loading' ? (
+                  <>
+                    <span className="loading-spinner">⟳</span>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="ai-icon">🤖</span>
+                    <span>Generate AI Screeners</span>
+                  </>
+                )}
+              </button>
+              
+              {aiGenerationStatus === 'success' && (
+                <div className="ai-status">
+                  <span>✅</span>
+                  <span>Screeners generated successfully!</span>
+                </div>
+              )}
+              
+              {aiGenerationStatus === 'loading' && (
+                <div className="ai-status loading">
+                  <span className="loading-spinner">⟳</span>
+                  <span>AI is analyzing your configuration...</span>
+                </div>
+              )}
+              
+              {aiGenerationStatus === 'error' && (
+                <div className="ai-status error">
+                  <span>❌</span>
+                  <span>Generation failed. Please try again.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="screeners-workspace">
+          {screeners.map((screener, index) => (
+            <div key={screener.id} className="screener-card enhanced">
+              <div className="screener-card-header">
+                <div className="screener-title-section">
+                  <span className="screener-icon">📋</span>
+                  <div className="screener-title-content">
+                    <h3>Screener for {getCategoryName(screener.categoryId)}</h3>
+                    <span className="screener-subtitle">{screener.questions.length} questions configured</span>
+                  </div>
+                </div>
+                {screener.categoryId && (
+                  <div className="category-badge enhanced">
+                    <span className="category-icon">🎯</span>
+                    <span className="category-name">{getCategoryName(screener.categoryId)}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="questions-list">
+              <div className="questions-workspace">
                 {screener.questions.map((question, qIndex) => (
-                  <div key={question.id} className="question-item">
-                    <div className="question-header">
-                      <span className="question-number">Q{qIndex + 1}</span>
-                      <button
-                        onClick={() => removeQuestion(screener.id, question.id)}
-                        className="remove-question-btn"
-                        title="Remove question"
-                      >
-                        ✕
-                      </button>
+                  <div key={question.id} className="question-card">
+                    <div className="question-card-header">
+                      <div className="question-number-badge">
+                        <span className="question-icon">❓</span>
+                        <span className="question-number">Q{qIndex + 1}</span>
+                      </div>
+                      <div className="question-actions">
+                        <button
+                          onClick={() => removeQuestion(screener.id, question.id)}
+                          className="remove-question-btn enhanced"
+                          title="Remove question"
+                        >
+                          <span className="remove-icon">🗑️</span>
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="question-form">
-                      <input
-                        type="text"
-                        value={question.question}
-                        onChange={(e) => updateQuestion(screener.id, question.id, 'question', e.target.value)}
-                        placeholder="Enter your question..."
-                        className="question-input"
-                      />
+                    <div className="question-form enhanced">
+                      <div className="question-input-section">
+                        <label className="question-label">Question Text</label>
+                        <input
+                          type="text"
+                          value={question.question}
+                          onChange={(e) => updateQuestion(screener.id, question.id, 'question', e.target.value)}
+                          placeholder="Enter your screening question..."
+                          className="question-input enhanced"
+                        />
+                      </div>
 
-                      <div className="question-options">
-                        <select
-                          value={question.type}
-                          onChange={(e) => updateQuestion(screener.id, question.id, 'type', e.target.value)}
-                          className="question-type-select"
-                        >
-                          <option value="single">Single Choice</option>
-                          <option value="multiple">Multiple Choice</option>
-                          <option value="text">Text Input</option>
-                        </select>
+                      <div className="question-settings">
+                        <div className="setting-group">
+                          <label className="setting-label">Question Type</label>
+                          <select
+                            value={question.type}
+                            onChange={(e) => updateQuestion(screener.id, question.id, 'type', e.target.value)}
+                            className="question-type-select enhanced"
+                          >
+                            <option value="single">📌 Single Choice</option>
+                            <option value="multiple">☑️ Multiple Choice</option>
+                            <option value="text">✏️ Text Input</option>
+                          </select>
+                        </div>
 
-                        <label className="required-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={question.required}
-                            onChange={(e) => updateQuestion(screener.id, question.id, 'required', e.target.checked)}
-                          />
-                          Required
-                        </label>
+                        <div className="setting-group">
+                          <label className="required-toggle">
+                            <input
+                              type="checkbox"
+                              checked={question.required}
+                              onChange={(e) => updateQuestion(screener.id, question.id, 'required', e.target.checked)}
+                              className="required-checkbox"
+                            />
+                            <span className="toggle-slider"></span>
+                            <span className="toggle-label">Required Question</span>
+                          </label>
+                        </div>
                       </div>
 
                       {(question.type === 'single' || question.type === 'multiple') && (
-                        <div className="answer-options">
-                          {question.options?.map((option, optIndex) => (
-                            <input
-                              key={optIndex}
-                              type="text"
-                              value={option}
-                              onChange={(e) => {
-                                const newOptions = [...(question.options || [])];
-                                newOptions[optIndex] = e.target.value;
+                        <div className="answer-options-section">
+                          <label className="options-label">Answer Options</label>
+                          <div className="answer-options enhanced">
+                            {question.options?.map((option, optIndex) => (
+                              <div key={optIndex} className="option-item">
+                                <span className="option-number">{optIndex + 1}</span>
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...(question.options || [])];
+                                    newOptions[optIndex] = e.target.value;
+                                    updateQuestion(screener.id, question.id, 'options', newOptions);
+                                  }}
+                                  placeholder={`Option ${optIndex + 1}`}
+                                  className="option-input enhanced"
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newOptions = question.options?.filter((_, i) => i !== optIndex) || [];
+                                    updateQuestion(screener.id, question.id, 'options', newOptions);
+                                  }}
+                                  className="remove-option-btn"
+                                  title="Remove option"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => {
+                                const newOptions = [...(question.options || []), `Option ${(question.options?.length || 0) + 1}`];
                                 updateQuestion(screener.id, question.id, 'options', newOptions);
                               }}
-                              placeholder={`Option ${optIndex + 1}`}
-                              className="option-input"
-                            />
-                          ))}
-                          <button
-                            onClick={() => {
-                              const newOptions = [...(question.options || []), `Option ${(question.options?.length || 0) + 1}`];
-                              updateQuestion(screener.id, question.id, 'options', newOptions);
-                            }}
-                            className="add-option-btn"
-                          >
-                            + Add Option
-                          </button>
+                              className="add-option-btn enhanced"
+                            >
+                              <span className="add-icon">➕</span>
+                              <span>Add Option</span>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
 
-                <button
-                  onClick={() => addQuestion(screener.id)}
-                  className="add-question-btn"
-                >
-                  + Add Question
-                </button>
+                <div className="add-question-section">
+                  <button
+                    onClick={() => addQuestion(screener.id)}
+                    className="add-question-btn enhanced"
+                  >
+                    <span className="add-icon">➕</span>
+                    <span>Add New Question</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
+        <div className="activation-checklist enhanced">
+          <div className="checklist-header">
+            <span className="checklist-icon">⚠️</span>
+            <h3>Pre-Activation Checklist</h3>
+          </div>
+          <div className="checklist-content">
+            <div className="checklist-items">
+              <div className="checklist-item">
+                <span className="check-icon">✅</span>
+                <span>Ensure all redirect links are valid and accessible</span>
+              </div>
+              <div className="checklist-item">
+                <span className="check-icon">✅</span>
+                <span>Verify live links are properly configured in your survey platform</span>
+              </div>
+              <div className="checklist-item">
+                <span className="check-icon">✅</span>
+                <span>Test screener logic and question flow</span>
+              </div>
+              <div className="checklist-item">
+                <span className="check-icon">✅</span>
+                <span>Confirm geography and category targeting is correct</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="navigation-buttons">
-          <button onClick={previousStep} className="btn btn-secondary">
+          <button onClick={previousStep} className="btn btn-secondary enhanced">
+            <span className="btn-icon">⬅️</span>
             Previous
           </button>
           <button 
             onClick={handleContinue} 
-            className="btn btn-primary"
+            className="btn btn-primary enhanced"
           >
+            <span className="btn-icon">🔍</span>
             Review Configuration
           </button>
-        </div>
-        <div className="activation-checklist" style={{marginTop: '2rem', padding: '1rem', border: '1px solid #f5c518', borderRadius: '8px', background: '#fffbe6'}}>
-          <h3 style={{color: '#b8860b', marginBottom: '0.5rem'}}>⚠️ Before Activation</h3>
-          <ul style={{marginLeft: '1.5rem'}}>
-            <li>Ensure all redirect links are valid and accessible</li>
-            <li>Verify live links are properly configured in your survey platform</li>
-            <li>Test screener logic and question flow</li>
-            <li>Confirm geography and category targeting is correct</li>
-          </ul>
         </div>
       </div>
     </div>

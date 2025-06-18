@@ -113,13 +113,25 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const generateLiveLinks = () => {
-    if (!state.selectedRequirement) return;
+    if (!state.selectedRequirement) {
+      console.log('generateLiveLinks: No requirement selected');
+      return;
+    }
+
+    console.log('generateLiveLinks called with:', {
+      requirement: state.selectedRequirement,
+      liveLinkPattern: state.selectedRequirement.liveLinkPattern,
+      geographies: state.selectedGeographies.map(g => g.name),
+      categories: state.selectedCategories.map(c => c.name),
+      paymentConfigs: state.paymentConfigs.length
+    });
 
     const liveLinks: LiveLink[] = [];
     const aqxIdPlaceholder = '[id]'; // Use placeholder for participant ID
     
     switch (state.selectedRequirement.liveLinkPattern) {
       case 'single':
+        console.log('Generating single pattern link');
         liveLinks.push({
           id: 'live-1',
           url: `https://survey.example.com/live/single?aqx_id=${aqxIdPlaceholder}`,
@@ -127,26 +139,29 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
         });
         break;
       case 'geo-based':
+        console.log('Generating geo-based pattern links for geographies:', state.selectedGeographies);
         state.selectedGeographies.forEach((geo, index) => {
           liveLinks.push({
             id: `live-geo-${geo.id}`,
-            url: `https://survey.example.com/live/geo/${geo.code}?aqx_id=${aqxIdPlaceholder}`,
+            url: `https://survey.example.com/live/${geo.name.toLowerCase().replace(/\s+/g, '-')}?geo=${geo.code}&aqx_id=${aqxIdPlaceholder}`,
             label: `Survey Link for ${geo.name}`,
             geographyId: geo.id
           });
         });
         break;
       case 'category-based':
+        console.log('Generating category-based pattern links for categories:', state.selectedCategories);
         state.selectedCategories.forEach((cat, index) => {
           liveLinks.push({
             id: `live-cat-${cat.id}`,
-            url: `https://survey.example.com/live/category/${cat.id}?aqx_id=${aqxIdPlaceholder}`,
+            url: `https://survey.example.com/live/${cat.name.toLowerCase().replace(/\s+/g, '-')}?cat=${cat.id}&aqx_id=${aqxIdPlaceholder}`,
             label: `Survey Link for ${cat.name}`,
             categoryId: cat.id
           });
         });
         break;
       case 'geo-category-based':
+        console.log('Generating geo-category-based pattern links');
         // Generate links based on actual payment configurations, not all combinations
         state.paymentConfigs.forEach((config) => {
           const geo = state.selectedGeographies.find(g => g.id === config.geography);
@@ -159,9 +174,11 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
             );
             
             if (!existingLink) {
+              const geoName = geo.name.toLowerCase().replace(/\s+/g, '-');
+              const catName = cat.name.toLowerCase().replace(/\s+/g, '-');
               liveLinks.push({
                 id: `live-geo-cat-${geo.id}-${cat.id}`,
-                url: `https://survey.example.com/live/geo/${geo.code}/cat/${cat.id}?aqx_id=${aqxIdPlaceholder}`,
+                url: `https://survey.example.com/live/${geoName}-${catName}?geo=${geo.code}&cat=${cat.id}&aqx_id=${aqxIdPlaceholder}`,
                 label: `Survey Link for ${geo.name} - ${cat.name}`,
                 geographyId: geo.id,
                 categoryId: cat.id
@@ -170,8 +187,11 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
           }
         });
         break;
+      default:
+        console.log('Unknown live link pattern:', state.selectedRequirement.liveLinkPattern);
     }
 
+    console.log('Generated live links:', liveLinks);
     dispatch({ type: 'SET_LIVE_LINKS', payload: liveLinks });
   };
 
