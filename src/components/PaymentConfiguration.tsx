@@ -223,16 +223,6 @@ export function PaymentConfiguration() {
     const hasMultipleCategories = categories.length > 1;
     const hasMultipleConfigsPerGeo = Object.values(groupedConfigs).some(configs => configs.length > 1);
 
-    // Debug logging
-    console.log('Requirement determination:', {
-      geographies: geographies.length,
-      categories: categories.length,
-      hasMultipleGeographies,
-      hasMultipleCategories,
-      hasMultipleConfigsPerGeo,
-      categoriesFound: categories.map(c => c.name)
-    });
-
     // Mock requirements for determination
     const requirements = [
       {
@@ -287,7 +277,6 @@ export function PaymentConfiguration() {
       selectedRequirement = requirements[2]; // Default to requirement 3 for complex cases
     }
     
-    console.log('Selected requirement:', selectedRequirement.id, selectedRequirement.name);
     return selectedRequirement;
   };
 

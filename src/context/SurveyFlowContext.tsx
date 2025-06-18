@@ -147,16 +147,27 @@ export const SurveyFlowProvider: React.FC<{ children: ReactNode }> = ({ children
         });
         break;
       case 'geo-category-based':
-        state.selectedGeographies.forEach((geo) => {
-          state.selectedCategories.forEach((cat) => {
-            liveLinks.push({
-              id: `live-geo-cat-${geo.id}-${cat.id}`,
-              url: `https://survey.example.com/live/geo/${geo.code}/cat/${cat.id}?aqx_id=${aqxIdPlaceholder}`,
-              label: `Survey Link for ${geo.name} - ${cat.name}`,
-              geographyId: geo.id,
-              categoryId: cat.id
-            });
-          });
+        // Generate links based on actual payment configurations, not all combinations
+        state.paymentConfigs.forEach((config) => {
+          const geo = state.selectedGeographies.find(g => g.id === config.geography);
+          const cat = state.selectedCategories.find(c => c.id === config.category);
+          
+          if (geo && cat) {
+            // Check if this combination already exists to avoid duplicates
+            const existingLink = liveLinks.find(link => 
+              link.geographyId === geo.id && link.categoryId === cat.id
+            );
+            
+            if (!existingLink) {
+              liveLinks.push({
+                id: `live-geo-cat-${geo.id}-${cat.id}`,
+                url: `https://survey.example.com/live/geo/${geo.code}/cat/${cat.id}?aqx_id=${aqxIdPlaceholder}`,
+                label: `Survey Link for ${geo.name} - ${cat.name}`,
+                geographyId: geo.id,
+                categoryId: cat.id
+              });
+            }
+          }
         });
         break;
     }
