@@ -218,6 +218,18 @@ export function FlowActive() {
                           <span className="stat">Clicks: {Math.floor(Math.random() * 500)}</span>
                           <span className="stat">Completions: {Math.floor(Math.random() * 300)}</span>
                         </div>
+
+                        <div className="link-actions">
+                          <button className="btn btn-small btn-secondary" title="Pause this link">
+                            ⏸️ Pause
+                          </button>
+                          <button className="btn btn-small btn-secondary" title="Edit configuration for this link">
+                            ✏️ Edit
+                          </button>
+                          <button className="btn btn-small btn-danger" title="Stop this link">
+                            🛑 Stop
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

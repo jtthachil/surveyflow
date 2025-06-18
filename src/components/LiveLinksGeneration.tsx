@@ -2,14 +2,25 @@ import React, { useEffect } from 'react';
 import { useSurveyFlow } from '../context/SurveyFlowContext';
 
 export function LiveLinksGeneration() {
-  const { state, generateLiveLinks, nextStep, previousStep } = useSurveyFlow();
+  const { state, generateLiveLinks, setRequirement, nextStep, previousStep } = useSurveyFlow();
 
   useEffect(() => {
-    // Auto-generate live links when component mounts
-    if (state.generatedLiveLinks.length === 0) {
+    // Load detected requirement from localStorage if not already set
+    if (!state.selectedRequirement) {
+      const detectedRequirement = localStorage.getItem('detectedRequirement');
+      if (detectedRequirement) {
+        const requirement = JSON.parse(detectedRequirement);
+        setRequirement(requirement);
+      }
+    }
+  }, [state.selectedRequirement, setRequirement]);
+
+  useEffect(() => {
+    // Auto-generate live links when component mounts and requirement is available
+    if (state.generatedLiveLinks.length === 0 && state.selectedRequirement) {
       generateLiveLinks();
     }
-  }, [generateLiveLinks, state.generatedLiveLinks.length]);
+  }, [generateLiveLinks, state.generatedLiveLinks.length, state.selectedRequirement]);
 
   const handleContinue = () => {
     nextStep();
@@ -123,6 +134,59 @@ export function LiveLinksGeneration() {
             )}
           </div>
         </div>
+
+        {/* Requirement 3 Footer - Potential Scenarios */}
+        {state.selectedRequirement?.id === 3 && (
+          <div className="requirement-3-footer">
+            <div className="potential-scenarios">
+              <h3>⚠️ Potential Scenario Alert</h3>
+              <div className="scenario-info">
+                <p>
+                  <strong>Requirement 3 - Complex Multi-Geography, Multi-Category Configuration</strong>
+                </p>
+                <p>
+                  Due to the complexity of your configuration, the following scenarios may occur during survey execution:
+                </p>
+                <ul>
+                  <li>Uneven response distribution across geography-category combinations</li>
+                  <li>Some combinations may reach target responses faster than others</li>
+                  <li>Budget allocation may need real-time adjustments</li>
+                  <li>Screening criteria may need refinement for specific combinations</li>
+                </ul>
+              </div>
+              
+              <div className="mock-view-section">
+                <h4>📊 Mock Response Distribution View</h4>
+                <div className="mock-distribution">
+                  <div className="distribution-grid">
+                    {state.selectedGeographies.slice(0, 2).map(geo => 
+                      state.selectedCategories.slice(0, 2).map(cat => (
+                        <div key={`${geo.id}-${cat.id}`} className="distribution-cell">
+                          <div className="cell-header">
+                            <span className="geo-label">{geo.code}</span>
+                            <span className="cat-label">{cat.name}</span>
+                          </div>
+                          <div className="progress-bar-mock">
+                            <div 
+                              className="progress-fill-mock" 
+                              style={{ width: `${Math.floor(Math.random() * 80) + 20}%` }}
+                            />
+                          </div>
+                          <div className="response-count">
+                            {Math.floor(Math.random() * 150) + 50}/200 responses
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <p className="mock-note">
+                    * This is a mock view showing how response distribution might look during live survey execution
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="navigation-buttons">
           <button onClick={previousStep} className="btn btn-secondary">

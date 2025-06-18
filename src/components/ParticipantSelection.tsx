@@ -173,7 +173,13 @@ export function ParticipantSelectionComponent() {
   };
 
   const getExpectedResponses = (liveLinkId: string) => {
-    const paymentConfig = state.paymentConfigs.find(p => p.liveLinkId === liveLinkId);
+    const link = state.generatedLiveLinks.find(l => l.id === liveLinkId);
+    if (!link) return 0;
+    
+    // Find payment config by matching geography and category
+    const paymentConfig = state.paymentConfigs.find(p => 
+      p.geography === link.geographyId && p.category === link.categoryId
+    );
     return paymentConfig ? paymentConfig.expectedResponses : 0;
   };
 

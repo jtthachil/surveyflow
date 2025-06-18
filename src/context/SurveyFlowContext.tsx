@@ -33,7 +33,7 @@ type SurveyFlowAction =
   | { type: 'RESET_FLOW' };
 
 const initialState: FlowState = {
-  currentStep: 'requirement-selection',
+  currentStep: 'landing',
   selectedGeographies: [],
   selectedCategories: [],
   redirectLinks: [],
@@ -44,13 +44,11 @@ const initialState: FlowState = {
 };
 
 const flowSteps: FlowStep[] = [
-  'requirement-selection',
-  'geography-selection', 
-  'category-selection',
+  'landing',
+  'payment-configuration',
   'redirect-links-received',
   'live-links-generation',
   'screener-configuration',
-  'payment-configuration',
   'participant-selection',
   'flow-review',
   'flow-active'
